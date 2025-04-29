@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "MyBufBytes"
+name = "my_buf_bytes"
 version = "0.0.1"
