@@ -13,7 +13,7 @@ where
     base: B,
     buf: Vec<u8>,
     buf_ptr: NonNull<u8>,
-    buf_ptr_end: *mut u8,
+    buf_ptr_end: NonNull<u8>,
     error: Option<std::io::Error>,
 }
 
@@ -39,7 +39,8 @@ where
         // バッファの先頭のポインタを取り出す。 これが、イテレーターのポインタともなる
         // イテレーターの終わりを判断するため、バッファ最後のポインタもとる
         let buf_ptr = NonNull::new(buf.as_mut_ptr()).unwrap();
-        let buf_ptr_end = unsafe { buf_ptr.as_ptr().add(buf_len) };
+        let buf_ptr_end = NonNull::new(&mut buf[buf_len-1] as *mut u8).unwrap();
+        // let buf_ptr_end = unsafe { buf_ptr.as_ptr().add(buf_len) };
         Ok(Self {
             base,
             buf,
@@ -58,7 +59,7 @@ where
             Ok(buf_len) => {
                 // ポインタを再生成する
                 self.buf_ptr = NonNull::new(self.buf.as_mut_ptr()).unwrap();
-                self.buf_ptr_end = unsafe { self.buf_ptr.as_ptr().add(buf_len) };
+                self.buf_ptr_end = NonNull::new(&mut self.buf[buf_len-1] as *mut u8).unwrap();
                 true
             },
             Err(e) => {
@@ -76,7 +77,7 @@ where
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.buf_ptr.as_ptr() == self.buf_ptr_end {
+        if self.buf_ptr.as_ptr() == self.buf_ptr_end.as_ptr() {
             if !self.refill_buffer() {
                 return None;
             }
