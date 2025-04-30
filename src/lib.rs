@@ -28,6 +28,10 @@ where
         Self::with_capacity(base, 8192)
     }
 
+    pub fn get_err<'a>(&'a self) -> &'a Option<std::io::Error> {
+        &self.error
+    }
+
     /// BufBytesを作成
     /// 
     /// バッファーサイズがいじれます。
