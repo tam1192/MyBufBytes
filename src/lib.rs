@@ -74,15 +74,15 @@ where
         &self.error
     }
 
-    pub fn try_block<T>(&mut self, f: impl Fn(&mut Self)->T) -> std::result::Result<T, &std::io::Error> {
-        let t = f(self);
-        match self.get_err() {
-            Some(err) => {
-                Err(err)
-            },
-            None => Ok(t),
-        }
-    }
+    // pub fn try_block<T>(&mut self, f: impl Fn(&mut Self)->T) -> std::result::Result<T, &std::io::Error> {
+    //     let t = f(self);
+    //     match self.get_err() {
+    //         Some(err) => {
+    //             Err(err)
+    //         },
+    //         None => Ok(t),
+    //     }
+    // }
 }
 
 impl<B> Iterator for BufBytes<B>
