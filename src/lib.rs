@@ -28,10 +28,6 @@ where
         Self::with_capacity(base, 8192)
     }
 
-    pub fn get_err<'a>(&'a self) -> &'a Option<std::io::Error> {
-        &self.error
-    }
-
     /// BufBytesを作成
     /// 
     /// バッファーサイズがいじれます。
@@ -70,6 +66,21 @@ where
                 self.error = Some(e);
                 false
             },
+        }
+    }
+
+    /// io操作中に生じたエラーを取得する
+    pub fn get_err<'a>(&'a self) -> &'a Option<std::io::Error> {
+        &self.error
+    }
+
+    pub fn try_block<T>(&mut self, f: impl Fn(&mut Self)->T) -> std::result::Result<T, &std::io::Error> {
+        let t = f(self);
+        match self.get_err() {
+            Some(err) => {
+                Err(err)
+            },
+            None => Ok(t),
         }
     }
 }
