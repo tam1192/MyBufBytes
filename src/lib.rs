@@ -3,7 +3,7 @@
 //! unsafeを使ってるので、あんまり保証がないのが特徴です。  
 //! ポインタ勉強用...  
 
-use std::{io::{Read, Result}, ptr::NonNull};
+use std::{io::{Error, Read, Result}, ptr::NonNull};
 
 #[derive(Debug)]
 pub struct BufBytes<B>
@@ -36,6 +36,11 @@ where
         let mut buf = vec![0; size];
         // buf_lenは読み込めたデータ長=バッファのサイズ
         let buf_len = base.read(buf.as_mut())?;
+
+        if buf_len == 0 {
+            return Err(Error::other("0 size file"));
+        }
+
         // バッファの先頭のポインタを取り出す。 これが、イテレーターのポインタともなる
         // イテレーターの終わりを判断するため、バッファ最後のポインタもとる
         let buf_ptr = NonNull::new(buf.as_mut_ptr()).unwrap();
@@ -103,4 +108,30 @@ where
             Some(*res)
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::NamedTempFile;
+    use std::io::{Seek, Write};
+
+    use super::*;
+
+    #[test]
+    fn buf_8byte_test() {
+        let base_txt = "abcdefg,hijklmn,opqrstu,vwxyz00\n";
+
+        // テストファイル作成
+        let mut file = NamedTempFile::new().unwrap();
+        write!(file, "{}", base_txt).unwrap();
+        // 書き込み後、シークを0に戻す
+        file.flush().unwrap();
+        file.seek(std::io::SeekFrom::Start(0)).unwrap();
+
+        let bytes = BufBytes::with_capacity(file, 8).unwrap();
+        
+        bytes.for_each(|b| println!("{}", b as char));
+
+    }
+
 }
