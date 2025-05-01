@@ -97,7 +97,7 @@ where
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.buf_ptr.as_ptr() == self.buf_ptr_end.as_ptr() {
+        if self.buf_ptr.as_ptr() > self.buf_ptr_end.as_ptr() {
             if !self.refill_buffer() {
                 return None;
             }
@@ -119,19 +119,24 @@ mod tests {
 
     #[test]
     fn buf_8byte_test() {
-        let base_txt = "abcdefg,hijklmn,opqrstu,vwxyz00\n";
+        let base_txt = "abcdefg\nhijklmn\nopqrstu\nvwxyz00\n";
 
         // テストファイル作成
         let mut file = NamedTempFile::new().unwrap();
-        write!(file, "{}", base_txt).unwrap();
+        file.write(base_txt.as_bytes()).unwrap();
+        // write!(file, "{}", base_txt).unwrap();
         // 書き込み後、シークを0に戻す
         file.flush().unwrap();
         file.seek(std::io::SeekFrom::Start(0)).unwrap();
 
         let bytes = BufBytes::with_capacity(file, 8).unwrap();
         
-        bytes.for_each(|b| println!("{}", b as char));
+        _ = bytes.zip(base_txt.bytes()).for_each(|(file, base)| {
+            println!("{}, {}", file, base);
+            // assert_eq!(file, base);
+        });
 
     }
+
 
 }
